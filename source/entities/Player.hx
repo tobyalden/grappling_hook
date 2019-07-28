@@ -4,6 +4,7 @@ import haxepunk.*;
 import haxepunk.graphics.*;
 import haxepunk.input.*;
 import haxepunk.math.*;
+import haxepunk.utils.*;
 
 class Player extends Entity
 {
@@ -75,6 +76,13 @@ class Player extends Entity
 
         moveBy(velocity.x * HXP.elapsed, velocity.y * HXP.elapsed, "walls");
         super.update();
+    }
+
+    override public function render(camera:Camera) {
+        if(hook != null && hook.isAttached) {
+            Draw.line(centerX, centerY, hook.centerX, hook.centerY);
+        }
+        super.render(camera);
     }
 
     private function isOnGround() {
