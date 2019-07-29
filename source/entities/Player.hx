@@ -18,9 +18,11 @@ class Player extends Entity
     private var hook:Hook;
     private var velocity:Vector2;
     private var sprite:Image;
+    private var rotateAmount:Float;
 
     public function new() {
         super(25, 300);
+        name = "player";
         layer = -1;
         Key.define("left", [Key.LEFT, Key.LEFT_SQUARE_BRACKET]);
         Key.define("right", [Key.RIGHT, Key.RIGHT_SQUARE_BRACKET]);
@@ -30,6 +32,7 @@ class Player extends Entity
         graphic = sprite;
         velocity = new Vector2(0, 0);
         setHitbox(16, 16);
+        rotateAmount = 0;
     }
 
     override public function update() {
@@ -80,20 +83,26 @@ class Player extends Entity
 
         if(hook != null && hook.isAttached) {
             // https://math.stackexchange.com/questions/814950/how-can-i-rotate-a-coordinate-around-a-circle
-            var rotateAmount = 3 * (sprite.flipX ? 1 : -1) * HXP.elapsed;
+            var calculateRotateAmount = new Vector2(
+                centerX - hook.centerX, centerY - hook.centerY
+            );
+            calculateRotateAmount.normalize();
+            rotateAmount += calculateRotateAmount.x * 10 * HXP.elapsed;
+            var rotateAmountScaled = rotateAmount * HXP.elapsed;
             var xRotated = (
-                Math.cos(rotateAmount) * (centerX - hook.centerX)
-                - Math.sin(rotateAmount) * (centerY - hook.centerY)
+                Math.cos(rotateAmountScaled) * (centerX - hook.centerX)
+                - Math.sin(rotateAmountScaled) * (centerY - hook.centerY)
                 + hook.centerX
             ) - width / 2;
             var yRotated = (
-                Math.sin(rotateAmount) * (centerX - hook.centerX)
-                + Math.cos(rotateAmount) * (centerY - hook.centerY)
+                Math.sin(rotateAmountScaled) * (centerX - hook.centerX)
+                + Math.cos(rotateAmountScaled) * (centerY - hook.centerY)
                 + hook.centerY
             ) - height / 2;
             velocity = new Vector2(xRotated - x, yRotated - y);
             velocity.normalize(GRAPPLE_EXIT_SPEED);
-            moveTo(xRotated, yRotated, "walls");
+            moveTo(xRotated, yRotated);
+            //moveTo(xRotated, yRotated, "walls");
         }
         else {
             moveBy(
@@ -101,6 +110,10 @@ class Player extends Entity
             );
         }
         super.update();
+    }
+
+    public function setRotateAmountToInitialValue() {
+        rotateAmount = sprite.flipX ? 3 : -3;
     }
 
     override public function render(camera:Camera) {

@@ -28,12 +28,16 @@ class Hook extends Entity
     override public function moveCollideX(_:Entity) {
         velocity = new Vector2(0, 0);
         isAttached = true;
+        var player = cast(scene.getInstance("player"), Player);
+        player.setRotateAmountToInitialValue();
         return true;
     }
 
     override public function moveCollideY(_:Entity) {
         velocity = new Vector2(0, 0);
         isAttached = true;
+        var player = cast(scene.getInstance("player"), Player);
+        player.setRotateAmountToInitialValue();
         return true;
     }
 }
