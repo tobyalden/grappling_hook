@@ -15,6 +15,8 @@ class Player extends Entity
     public static inline var HOOK_SHOT_SPEED = 500;
     public static inline var GRAPPLE_EXIT_SPEED = 300;
     public static inline var ANGULAR_ACCELERATION_MULTIPLIER = 7;
+    public static inline var SWING_DECELERATION = 0.99;
+    public static inline var INITIAL_SWING_SPEED = 3;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -88,16 +90,19 @@ class Player extends Entity
             );
             angularAcceleration.normalize(ANGULAR_ACCELERATION_MULTIPLIER);
             rotateAmount += angularAcceleration.x * HXP.elapsed;
-            var rotateAmountScaled = rotateAmount * HXP.elapsed;
+            rotateAmount *= Math.pow(
+                SWING_DECELERATION, (HXP.elapsed * HXP.assignedFrameRate)
+            );
+            var rotateAmountTimeScaled = rotateAmount * HXP.elapsed;
             // Math from https://math.stackexchange.com/questions/814950
             var xRotated = (
-                Math.cos(rotateAmountScaled) * (centerX - hook.centerX)
-                - Math.sin(rotateAmountScaled) * (centerY - hook.centerY)
+                Math.cos(rotateAmountTimeScaled) * (centerX - hook.centerX)
+                - Math.sin(rotateAmountTimeScaled) * (centerY - hook.centerY)
                 + hook.centerX
             ) - width / 2;
             var yRotated = (
-                Math.sin(rotateAmountScaled) * (centerX - hook.centerX)
-                + Math.cos(rotateAmountScaled) * (centerY - hook.centerY)
+                Math.sin(rotateAmountTimeScaled) * (centerX - hook.centerX)
+                + Math.cos(rotateAmountTimeScaled) * (centerY - hook.centerY)
                 + hook.centerY
             ) - height / 2;
             velocity = new Vector2(xRotated - x, yRotated - y);
@@ -114,7 +119,7 @@ class Player extends Entity
     }
 
     public function setRotateAmountToInitialValue() {
-        rotateAmount = sprite.flipX ? 3 : -3;
+        rotateAmount = INITIAL_SWING_SPEED * (sprite.flipX ? 1 : -1);
     }
 
     override public function render(camera:Camera) {
