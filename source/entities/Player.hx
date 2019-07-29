@@ -14,6 +14,7 @@ class Player extends Entity
     public static inline var MAX_FALL_SPEED = 300;
     public static inline var HOOK_SHOT_SPEED = 500;
     public static inline var GRAPPLE_EXIT_SPEED = 300;
+    public static inline var ANGULAR_ACCELERATION_MULTIPLIER = 7;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -82,13 +83,13 @@ class Player extends Entity
         }
 
         if(hook != null && hook.isAttached) {
-            // https://math.stackexchange.com/questions/814950/how-can-i-rotate-a-coordinate-around-a-circle
-            var calculateRotateAmount = new Vector2(
+            var angularAcceleration = new Vector2(
                 centerX - hook.centerX, centerY - hook.centerY
             );
-            calculateRotateAmount.normalize();
-            rotateAmount += calculateRotateAmount.x * 10 * HXP.elapsed;
+            angularAcceleration.normalize(ANGULAR_ACCELERATION_MULTIPLIER);
+            rotateAmount += angularAcceleration.x * HXP.elapsed;
             var rotateAmountScaled = rotateAmount * HXP.elapsed;
+            // Math from https://math.stackexchange.com/questions/814950
             var xRotated = (
                 Math.cos(rotateAmountScaled) * (centerX - hook.centerX)
                 - Math.sin(rotateAmountScaled) * (centerY - hook.centerY)
