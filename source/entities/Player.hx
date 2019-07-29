@@ -12,7 +12,8 @@ class Player extends Entity
     public static inline var JUMP_POWER = 300;
     public static inline var GRAVITY = 800;
     public static inline var MAX_FALL_SPEED = 300;
-    public static inline var HOOK_SPEED = 500;
+    public static inline var HOOK_SHOT_SPEED = 500;
+    public static inline var GRAPPLE_EXIT_SPEED = 300;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -32,16 +33,18 @@ class Player extends Entity
     }
 
     override public function update() {
-        if(Input.check("left")) {
-            velocity.x = -RUN_SPEED;
-            sprite.flipX = true;
-        }
-        else if(Input.check("right")) {
-            velocity.x = RUN_SPEED;
-            sprite.flipX = false;
-        }
-        else {
-            velocity.x = 0;
+        if(isOnGround()) {
+            if(Input.check("left")) {
+                velocity.x = -RUN_SPEED;
+                sprite.flipX = true;
+            }
+            else if(Input.check("right")) {
+                velocity.x = RUN_SPEED;
+                sprite.flipX = false;
+            }
+            else {
+                velocity.x = 0;
+            }
         }
 
         if(isOnGround()) {
@@ -62,8 +65,8 @@ class Player extends Entity
                 scene.remove(hook);
             }
             var hookVelocity = new Vector2(
-                sprite.flipX ? -HOOK_SPEED : HOOK_SPEED,
-                -HOOK_SPEED
+                sprite.flipX ? -HOOK_SHOT_SPEED : HOOK_SHOT_SPEED,
+                -HOOK_SHOT_SPEED
             );
             hook = new Hook(centerX - 4, centerY - 4, hookVelocity);
             scene.add(hook);
@@ -77,19 +80,20 @@ class Player extends Entity
 
         if(hook != null && hook.isAttached) {
             // https://math.stackexchange.com/questions/814950/how-can-i-rotate-a-coordinate-around-a-circle
-            var rotateAmount = 0.05;
-            var xRot = (
+            var rotateAmount = 3 * (sprite.flipX ? 1 : -1) * HXP.elapsed;
+            var xRotated = (
                 Math.cos(rotateAmount) * (centerX - hook.centerX)
                 - Math.sin(rotateAmount) * (centerY - hook.centerY)
                 + hook.centerX
-            );
-            var yRot = (
+            ) - width / 2;
+            var yRotated = (
                 Math.sin(rotateAmount) * (centerX - hook.centerX)
                 + Math.cos(rotateAmount) * (centerY - hook.centerY)
                 + hook.centerY
-            );
-            x = xRot - width / 2;
-            y = yRot - height / 2;
+            ) - height / 2;
+            velocity = new Vector2(xRotated - x, yRotated - y);
+            velocity.normalize(GRAPPLE_EXIT_SPEED);
+            moveTo(xRotated, yRotated, "walls");
         }
         else {
             moveBy(
