@@ -13,10 +13,11 @@ class Player extends Entity
     public static inline var GRAVITY = 800;
     public static inline var MAX_FALL_SPEED = 300;
     public static inline var HOOK_SHOT_SPEED = 500;
-    public static inline var GRAPPLE_EXIT_SPEED = 300;
+    public static inline var GRAPPLE_EXIT_SPEED = 100;
     public static inline var ANGULAR_ACCELERATION_MULTIPLIER = 7;
     public static inline var SWING_DECELERATION = 0.99;
     public static inline var INITIAL_SWING_SPEED = 3;
+    public static inline var SWING_INFLUENCE = 2;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -70,9 +71,15 @@ class Player extends Entity
             if(hook != null) {
                 scene.remove(hook);
             }
+            var hookDirection = sprite.flipX ? -1 : 1;
+            if(Input.check("left")) {
+                hookDirection = -1;
+            }
+            else if(Input.check("right")) {
+                hookDirection = 1;
+            }
             var hookVelocity = new Vector2(
-                sprite.flipX ? -HOOK_SHOT_SPEED : HOOK_SHOT_SPEED,
-                -HOOK_SHOT_SPEED
+                hookDirection * HOOK_SHOT_SPEED, -HOOK_SHOT_SPEED
             );
             hook = new Hook(centerX - 4, centerY - 4, hookVelocity);
             scene.add(hook);
@@ -89,6 +96,14 @@ class Player extends Entity
                 centerX - hook.centerX, centerY - hook.centerY
             );
             angularAcceleration.normalize(ANGULAR_ACCELERATION_MULTIPLIER);
+            if(Input.check("left")) {
+                var swingInfluence = new Vector2(SWING_INFLUENCE, 0);
+                angularAcceleration.add(swingInfluence);
+            }
+            else if(Input.check("right")) {
+                var swingInfluence = new Vector2(-SWING_INFLUENCE, 0);
+                angularAcceleration.add(swingInfluence);
+            }
             rotateAmount += angularAcceleration.x * HXP.elapsed;
             rotateAmount *= Math.pow(
                 SWING_DECELERATION, (HXP.elapsed * HXP.assignedFrameRate)
@@ -106,9 +121,8 @@ class Player extends Entity
                 + hook.centerY
             ) - height / 2;
             velocity = new Vector2(xRotated - x, yRotated - y);
-            velocity.normalize(GRAPPLE_EXIT_SPEED);
-            moveTo(xRotated, yRotated);
-            //moveTo(xRotated, yRotated, "walls");
+            velocity.scale(1 / HXP.elapsed);
+            moveTo(xRotated, yRotated, "walls");
         }
         else {
             moveBy(
@@ -119,7 +133,14 @@ class Player extends Entity
     }
 
     public function setRotateAmountToInitialValue() {
-        rotateAmount = INITIAL_SWING_SPEED * (sprite.flipX ? 1 : -1);
+        var hookDirection = sprite.flipX ? -1 : 1;
+        if(Input.check("left")) {
+            hookDirection = -1;
+        }
+        else if(Input.check("right")) {
+            hookDirection = 1;
+        }
+        rotateAmount = -hookDirection * INITIAL_SWING_SPEED;
     }
 
     override public function render(camera:Camera) {
