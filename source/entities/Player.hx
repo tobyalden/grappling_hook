@@ -18,6 +18,7 @@ class Player extends Entity
     public static inline var SWING_DECELERATION = 0.99;
     public static inline var INITIAL_SWING_SPEED = 3;
     public static inline var SWING_INFLUENCE = 4;
+    public static inline var MIN_HOOK_DISTANCE = 50;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -91,7 +92,11 @@ class Player extends Entity
             }
         }
 
-        if(hook != null && hook.isAttached) {
+        if(
+            hook != null
+            && hook.isAttached
+            && distanceFrom(hook) > MIN_HOOK_DISTANCE
+        ) {
             if(
                 isOnCeiling() || isOnGround()
                 || isOnLeftWall() || isOnRightWall()
