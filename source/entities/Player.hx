@@ -14,10 +14,10 @@ class Player extends Entity
     public static inline var MAX_FALL_SPEED = 300;
     public static inline var HOOK_SHOT_SPEED = 500;
     public static inline var GRAPPLE_EXIT_SPEED = 100;
-    public static inline var ANGULAR_ACCELERATION_MULTIPLIER = 7;
+    public static inline var ANGULAR_ACCELERATION_MULTIPLIER = 14;
     public static inline var SWING_DECELERATION = 0.99;
     public static inline var INITIAL_SWING_SPEED = 3;
-    public static inline var SWING_INFLUENCE = 2;
+    public static inline var SWING_INFLUENCE = 4;
 
     private var hook:Hook;
     private var velocity:Vector2;
@@ -92,6 +92,12 @@ class Player extends Entity
         }
 
         if(hook != null && hook.isAttached) {
+            if(
+                isOnCeiling() || isOnGround()
+                || isOnLeftWall() || isOnRightWall()
+            ) {
+                rotateAmount = 0;
+            }
             var angularAcceleration = new Vector2(
                 centerX - hook.centerX, centerY - hook.centerY
             );
@@ -122,7 +128,14 @@ class Player extends Entity
             ) - height / 2;
             velocity = new Vector2(xRotated - x, yRotated - y);
             velocity.scale(1 / HXP.elapsed);
-            moveTo(xRotated, yRotated, "walls");
+            if(!(
+                isOnCeiling() && yRotated < y
+                || isOnGround() && yRotated > y
+                || isOnLeftWall() && xRotated < x
+                || isOnRightWall() && xRotated > x
+            )) {
+                moveTo(xRotated, yRotated, "walls");
+            }
         }
         else {
             moveBy(
@@ -130,6 +143,14 @@ class Player extends Entity
             );
         }
         super.update();
+    }
+
+    override public function moveCollideX(e:Entity) {
+        return true;
+    }
+
+    override public function moveCollideY(e:Entity) {
+        return true;
     }
 
     public function setRotateAmountToInitialValue() {
@@ -160,7 +181,19 @@ class Player extends Entity
         super.render(camera);
     }
 
+    private function isOnCeiling() {
+        return collide("walls", x, y - 1) != null;
+    }
+
     private function isOnGround() {
         return collide("walls", x, y + 1) != null;
+    }
+
+    private function isOnLeftWall() {
+        return collide("walls", x - 1, y) != null;
+    }
+
+    private function isOnRightWall() {
+        return collide("walls", x + 1, y) != null;
     }
 }
