@@ -33,6 +33,8 @@ class Player extends Entity
         Key.define("right", [Key.RIGHT, Key.RIGHT_SQUARE_BRACKET]);
         Key.define("jump", [Key.Z]);
         Key.define("grapple", [Key.X]);
+        Key.define("grappleup", [Key.C]);
+        Key.define("grappleside", [Key.V]);
         sprite = new Image("graphics/player.png");
         graphic = sprite;
         velocity = new Vector2(0, 0);
@@ -82,6 +84,12 @@ class Player extends Entity
             var hookVelocity = new Vector2(
                 hookDirection * HOOK_SHOT_SPEED, -HOOK_SHOT_SPEED
             );
+            if(Input.check("grappleup")) {
+                hookVelocity.x = 0;
+            }
+            else if(Input.check("grappleside")) {
+                hookVelocity.y = 0;
+            }
             hook = new Hook(centerX - 4, centerY - 4, hookVelocity);
             scene.add(hook);
         }
@@ -166,7 +174,16 @@ class Player extends Entity
         else if(Input.check("right")) {
             hookDirection = 1;
         }
-        rotateAmount = -hookDirection * INITIAL_SWING_SPEED;
+        var entranceAngle = new Vector2(
+            centerX - hook.centerX, centerY - hook.centerY
+        );
+        entranceAngle.normalize(INITIAL_SWING_SPEED);
+        rotateAmount = entranceAngle.x;
+        rotateAmount -= velocity.x / 100;
+        if(velocity.y < 0) {
+            rotateAmount += (velocity.y / 100) * entranceAngle.x;
+        }
+        trace(rotateAmount);
     }
 
     override public function render(camera:Camera) {

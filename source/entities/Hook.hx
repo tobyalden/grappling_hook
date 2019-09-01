@@ -19,6 +19,7 @@ class Hook extends Entity
     }
 
     override public function update() {
+        var player = scene.getInstance("player");
         moveBy(
             velocity.x * HXP.elapsed, velocity.y * HXP.elapsed, "walls", true
         );
